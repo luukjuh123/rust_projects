@@ -1,15 +1,13 @@
-FROM rust:latest as builder
+FROM rustlang/rust:nightly AS builder
 
-WORKDIR /usr/src/myfrontend
-COPY . .
+WORKDIR /workdir
+ENV CARGO_HOME=/workdir/.cargo
+COPY ./Cargo.toml ./Cargo.lock ./
+COPY ./src ./src
+COPY ./source ./source
+RUN cargo +nightly build --release
 
-RUN cargo build --release
-
-
-FROM debian:buster-slim
-
-COPY --from=builder /usr/src/myfrontend/target/release/myfrontend /usr/local/bin/myfrontend
-
-COPY ./source/test.txt /source/test.txt
-
-CMD ["myfrontend", "/source/test.txt"]
+FROM debian:stretch-slim
+EXPOSE 8000
+COPY --from=0 /workdir/target/release/frontend /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/frontend"]

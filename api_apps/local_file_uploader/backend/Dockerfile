@@ -1,8 +1,13 @@
-FROM rust:latest as builder
-WORKDIR /usr/src/mybackend
-COPY . .
-RUN cargo install --path .
+FROM rustlang/rust:nightly AS builder
 
-FROM debian:buster-slim
-COPY --from=builder /usr/local/cargo/bin/mybackend /usr/local/bin/mybackend
-CMD ["mybackend"]
+WORKDIR /workdir
+ENV CARGO_HOME=/workdir/.cargo
+COPY ./Cargo.toml ./Cargo.lock ./
+COPY ./src ./src
+COPY ./sink ./sink
+RUN cargo +nightly build --release
+
+FROM debian:stretch-slim
+EXPOSE 3030
+COPY --from=0 /workdir/target/release/backend /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/backend"]
