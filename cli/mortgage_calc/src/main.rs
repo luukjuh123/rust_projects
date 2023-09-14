@@ -1,43 +1,55 @@
-fn main() {
-    loop {
-        println!(
-            "Choose a calc operation c (for monthly costs), m (for mortgage calc) or 'q' to quit:"
-        );
-        let operation = get_user_input();
+mod handlers;
+use clap::Parser;
 
-        if operation == "q" {
-            break;
-        }
+#[derive(Parser)]
+pub struct MortgageCalculator {
+    /// Sets the principal loan amount
+    #[arg(short, long, value_name = "PRINCIPAL")]
+    principal: f64,
 
-        if operation == "c" {
-            println!("Enter total amount to be paid:");
-            let payment_amount = get_user_input();
-        }
+    /// Sets the annual interest rate (in percentage, e.g., 5 for 5%)
+    #[arg(short, long, value_name = "RATE")]
+    rate: f64,
 
-        if operation == "m" {
-            println!("Enter monthly income:");
-            let monthly_income = get_user_input();
-        }
+    /// Sets the loan term in years
+    #[arg(short, long, value_name = "TERM")]
+    term: u32,
 
-        println!("Enter Montly Payment Amount:");
-        let payment_amount = get_user_input();
+    /// Sets the total worth of the house
+    #[arg(short, long, value_name = "WOZ")]
+    woz: f64,
 
-        println!("Enter the first number:");
-        let num1: f64 = get_user_input()
-            .parse()
-            .expect("Please enter a valid number.");
+    /// Sets the highest earning income
+    #[arg(short, long, value_name = "INCOME")]
+    income: f64,
 
-        println!("Enter the second number:");
-        let num2: f64 = get_user_input()
-            .parse()
-            .expect("Please enter a valid number.");
-    }
+    /// Turn debugging information on
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    debug: u8,
 }
 
-fn get_user_input() -> String {
-    let mut input = String::new();
-    std::io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read from stdin");
-    input.trim().to_string()
+fn main() {
+    let args = MortgageCalculator::parse();
+
+    let principal: f64 = args.principal;
+    let rate: f64 = args.rate;
+    let term: u32 = args.term;
+    let woz: f64 = args.woz;
+    let income: f64 = args.income;
+
+    println!("Principal: ${}", principal);
+    println!("Annual Interest Rate: {}%", rate);
+    println!("Loan Term: {} years", term);
+    println!("Woz: {}", woz);
+    println!("Income: {}", income);
+
+    match args.debug {
+        0 => println!("Debug mode is off"),
+        1 => println!("Debug mode is kind of on"),
+        2 => println!("Debug mode is on"),
+        _ => println!("Don't be crazy"),
+    }
+    // handlers::fixed_mortgage_calc(args);
+    let schedule = handlers::amortization_schedule(args);
+    handlers::display_schedule(schedule);
 }
