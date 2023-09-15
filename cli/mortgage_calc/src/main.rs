@@ -1,4 +1,5 @@
 mod handlers;
+mod txtwriter;
 use clap::Parser;
 
 #[derive(Parser)]
@@ -23,6 +24,10 @@ pub struct MortgageCalculator {
     #[arg(short, long, value_name = "INCOME")]
     income: f64,
 
+    /// Sets the calculation period
+    #[arg(long, value_name = "PERIOD")]
+    period: handlers::CalculationPeriod,
+
     /// Turn debugging information on
     #[arg(short, long, action = clap::ArgAction::Count)]
     debug: u8,
@@ -36,12 +41,14 @@ fn main() {
     let term: u32 = args.term;
     let woz: f64 = args.woz;
     let income: f64 = args.income;
+    let period: handlers::CalculationPeriod = args.period;
 
     println!("Principal: ${}", principal);
     println!("Annual Interest Rate: {}%", rate);
     println!("Loan Term: {} years", term);
     println!("Woz: {}", woz);
     println!("Income: {}", income);
+    println!("Period: {:?}", period);
 
     match args.debug {
         0 => println!("Debug mode is off"),
@@ -51,5 +58,6 @@ fn main() {
     }
     // handlers::fixed_mortgage_calc(args);
     let schedule = handlers::amortization_schedule(args);
-    handlers::display_schedule(schedule);
+    handlers::display_schedule(&schedule, period);
+    txtwriter::write_schedule_to_txt(&schedule, period);
 }

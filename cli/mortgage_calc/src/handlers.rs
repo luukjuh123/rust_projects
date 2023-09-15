@@ -3,12 +3,32 @@ use cli_table::{format::Justify, print_stdout, Cell, CellStruct, Style, Table};
 
 #[derive(Table)]
 pub struct AmortizationDetail {
-    month: u32,
-    interest_payment: f64,
-    principal_payment: f64,
-    remaining_balance: f64,
-    mid: f64,
-    net_payment: f64,
+    pub month: u32,
+    pub interest_payment: f64,
+    pub principal_payment: f64,
+    pub remaining_balance: f64,
+    pub mid: f64,
+    pub net_payment: f64,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum CalculationPeriod {
+    Monthly,
+    Yearly,
+}
+
+use std::str::FromStr;
+
+impl FromStr for CalculationPeriod {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Monthly" => Ok(CalculationPeriod::Monthly),
+            "Yearly" => Ok(CalculationPeriod::Yearly),
+            _ => Err(format!("'{}' is not a valid calculation period", s)),
+        }
+    }
 }
 
 pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail> {
@@ -33,25 +53,45 @@ pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
         let principal_payment = monthly_payment - monthly_interest;
         let mortgage_interest_deduction =
             monthly_interest * mortgage_interest_deduction_bracket - tax_cost_per_month;
-
         let net_payment = monthly_interest + principal_payment - mortgage_interest_deduction;
 
         current_principal -= principal_payment;
 
-        schedule.push(AmortizationDetail {
-            month,
-            interest_payment: monthly_interest,
-            principal_payment,
-            remaining_balance: current_principal,
-            mid: mortgage_interest_deduction,
-            net_payment,
-        });
+        match args.period {
+            CalculationPeriod::Monthly => {
+                schedule.push(AmortizationDetail {
+                    month,
+                    interest_payment: monthly_interest,
+                    principal_payment,
+                    remaining_balance: current_principal,
+                    mid: mortgage_interest_deduction,
+                    net_payment,
+                });
+            }
+            CalculationPeriod::Yearly => {
+                if month % 12 == 0 {
+                    schedule.push(AmortizationDetail {
+                        month: month / 12,
+                        interest_payment: monthly_interest * 12.0,
+                        principal_payment: principal_payment * 12.0,
+                        remaining_balance: current_principal,
+                        mid: mortgage_interest_deduction * 12.0,
+                        net_payment: net_payment * 12.0,
+                    });
+                }
+            }
+        }
     }
 
     schedule
 }
 
-pub fn display_schedule(schedule: Vec<AmortizationDetail>) {
+pub fn display_schedule(schedule: &Vec<AmortizationDetail>, period: CalculationPeriod) {
+    let period_label = match period {
+        CalculationPeriod::Monthly => "Month",
+        CalculationPeriod::Yearly => "Year",
+    };
+
     let table: Vec<Vec<CellStruct>> = schedule
         .into_iter()
         .map(|detail| {
@@ -77,12 +117,12 @@ pub fn display_schedule(schedule: Vec<AmortizationDetail>) {
     let table = table
         .table()
         .title(vec![
-            "Month".cell().bold(true),
-            "Interest".cell().bold(true),
-            "Principal".cell().bold(true),
-            "Remaining Balance".cell().bold(true),
-            "MID".cell().bold(true),
-            "Net Payment".cell().bold(true),
+            period_label.cell(),
+            "Interest".cell(),
+            "Principal".cell(),
+            "Remaining Balance".cell(),
+            "MID".cell(),
+            "Net Payment".cell(),
         ])
         .bold(true);
 
