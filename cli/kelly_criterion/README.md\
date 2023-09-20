@@ -1,0 +1,8 @@
+Usage: kelly_criterion --p <PROBABILITY_INCREASE> --l <FRACTION_LOSS> --g <FRACTION_GAIN> --assets <ASSETS>
+
+Options:
+-p, --p <PROBABILITY_INCREASE> Probability that the investment increases in value (0 <= p <= 1)
+-l, --l <FRACTION_LOSS> Fraction that is lost in a negative outcome (e.g., 0.1 for 10% loss)
+-g, --g <FRACTION_GAIN> Fraction that is gained in a positive outcome (e.g., 0.1 for 10% gain)
+-a, --assets <ASSETS> Current assets
+-h, --help Print help
