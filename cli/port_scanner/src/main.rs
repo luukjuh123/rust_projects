@@ -6,6 +6,14 @@ const START_PORT: u16 = 1;
 const END_PORT: u16 = 10240;
 const TIMEOUT: u64 = 2;  // timeout in seconds
 
+#[derive(Parser)]
+pub struct DebtCalculator {
+    /// Sets the principal debt amount
+    #[arg(short, long, value_name = "NETWORK")]
+    network: f64,
+}
+
+
 #[tokio::main]
 async fn main() {
     for port in START_PORT..=END_PORT {

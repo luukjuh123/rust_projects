@@ -18,3 +18,8 @@
 
 # macOS
 .DS_Store
+
+**/port_scanner/
+**/invoicecli
+duck.db
+**/duck.db
