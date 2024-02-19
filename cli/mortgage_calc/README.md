@@ -15,3 +15,4 @@ cargo run -- -p 770566.67 -r 4.00 -t 30 -w 840000 -i 100000 --period Monthly --m
 - w = Sets the total worth of the house (woz worth)
 - i = Sets the highest earning income (necessary for tax calc (if above 73032 additional tax has to be paid))
 - --period = Yearly or Monthly
+- --mortgage-type = Linear or Annuity
