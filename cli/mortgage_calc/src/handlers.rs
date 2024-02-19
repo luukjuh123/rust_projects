@@ -7,14 +7,34 @@ pub struct AmortizationDetail {
     pub interest_payment: f64,
     pub principal_payment: f64,
     pub remaining_balance: f64,
+    pub payment: f64,
     pub mid: f64,
     pub net_payment: f64,
+    pub my_portion: f64,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CalculationPeriod {
     Monthly,
     Yearly,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum MortgageType {
+    Annuity,
+    Linear,
+}
+
+impl FromStr for MortgageType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "annuity" => Ok(MortgageType::Annuity),
+            "linear" => Ok(MortgageType::Linear),
+            _ => Err(format!("'{}' is not a valid mortgage type", s)),
+        }
+    }
 }
 
 use std::str::FromStr;
@@ -32,30 +52,41 @@ impl FromStr for CalculationPeriod {
 }
 
 pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail> {
+    match args.mortgage_type {
+        MortgageType::Annuity => calculate_annuity_schedule(args),
+        MortgageType::Linear => calculate_linear_schedule(args),
+    }
+}
+
+
+fn calculate_mortgage_interest_deduction(interest_payment: f64, args: &MortgageCalculator) -> f64 {
+    let notional_rental_value_annual = args.woz * 0.0035; // Annual notional rental value
+    let tax_bracket_for_rental = if args.income > 73032.0 { 0.495 } else { 0.3693 };
+    let tax_cost_annual = notional_rental_value_annual * tax_bracket_for_rental;
+    let tax_cost_per_month = tax_cost_annual / 12.0;
+
+    let mortgage_interest_deduction_bracket = 0.3693;
+    interest_payment * mortgage_interest_deduction_bracket - tax_cost_per_month
+}
+
+
+fn calculate_annuity_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail> {
     let monthly_rate = args.rate / 12.0 / 100.0;
     let num_payments = args.term * 12;
     let monthly_payment = args.principal
         * (monthly_rate * (1.0 + monthly_rate).powi(num_payments as i32))
         / ((1.0 + monthly_rate).powi(num_payments as i32) - 1.0);
-
-    let notional_rental_value_annual = args.woz * 0.0035; // Annual notional rental value
-
-    let tax_bracket_for_rental = if args.income > 73032.0 { 0.495 } else { 0.3693 };
-    let tax_cost_annual = notional_rental_value_annual * tax_bracket_for_rental; // Tax on the notional rental value
-    let tax_cost_per_month = tax_cost_annual / 12.0; // Monthly tax on the notional rental value
-
-    let mortgage_interest_deduction_bracket = 0.3693;
     let mut current_principal = args.principal;
     let mut schedule = Vec::new();
 
     for month in 1..=num_payments {
         let monthly_interest = current_principal * monthly_rate;
         let principal_payment = monthly_payment - monthly_interest;
-        let mortgage_interest_deduction =
-            monthly_interest * mortgage_interest_deduction_bracket - tax_cost_per_month;
+        let payment = monthly_interest + principal_payment;
+        let mortgage_interest_deduction = calculate_mortgage_interest_deduction(monthly_interest, &args);
         let net_payment = monthly_interest + principal_payment - mortgage_interest_deduction;
-
         current_principal -= principal_payment;
+        let my_portion = 0.4 * payment;
 
         match args.period {
             CalculationPeriod::Monthly => {
@@ -64,8 +95,10 @@ pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
                     interest_payment: monthly_interest,
                     principal_payment,
                     remaining_balance: current_principal,
+                    payment: payment,
                     mid: mortgage_interest_deduction,
                     net_payment,
+                    my_portion,
                 });
             }
             CalculationPeriod::Yearly => {
@@ -75,8 +108,10 @@ pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
                         interest_payment: monthly_interest * 12.0,
                         principal_payment: principal_payment * 12.0,
                         remaining_balance: current_principal,
+                        payment: payment * 12.0,
                         mid: mortgage_interest_deduction * 12.0,
                         net_payment: net_payment * 12.0,
+                        my_portion: my_portion * 12.0,
                     });
                 }
             }
@@ -85,6 +120,57 @@ pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
 
     schedule
 }
+
+
+fn calculate_linear_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail> {
+    let monthly_rate = args.rate / 12.0 / 100.0;
+    let num_payments = args.term * 12;
+    let principal_payment = args.principal / num_payments as f64;
+    let mut current_principal = args.principal;
+    let mut schedule = Vec::new();
+
+    for month in 1..=num_payments {
+        let monthly_interest = current_principal * monthly_rate;
+        let payment = monthly_interest + principal_payment;
+        let mortgage_interest_deduction = calculate_mortgage_interest_deduction(monthly_interest, &args);
+        let net_payment = principal_payment + monthly_interest - mortgage_interest_deduction;
+        current_principal -= principal_payment;
+        let my_portion = 0.4 * payment;
+
+        match args.period {
+            CalculationPeriod::Monthly => {
+                schedule.push(AmortizationDetail {
+                    month,
+                    interest_payment: monthly_interest,
+                    principal_payment,
+                    remaining_balance: current_principal,
+                    payment: payment,
+                    mid: mortgage_interest_deduction,
+                    net_payment,
+                    my_portion,
+                });
+            }
+            CalculationPeriod::Yearly => {
+                if month % 12 == 0 {
+                    schedule.push(AmortizationDetail {
+                        month: month / 12,
+                        interest_payment: monthly_interest * 12.0,
+                        principal_payment: principal_payment * 12.0,
+                        remaining_balance: current_principal,
+                        payment: payment * 12.0,
+                        mid: mortgage_interest_deduction * 12.0,
+                        net_payment: net_payment * 12.0,
+                        my_portion: my_portion * 12.0,
+                    });
+                }
+            }
+        }
+    }
+
+    schedule
+}
+
+
 
 pub fn display_schedule(schedule: &Vec<AmortizationDetail>, period: CalculationPeriod) {
     let period_label = match period {
@@ -106,8 +192,14 @@ pub fn display_schedule(schedule: &Vec<AmortizationDetail>, period: CalculationP
                 format!("{:.2}", detail.remaining_balance)
                     .cell()
                     .justify(Justify::Right),
+                format!("{:.2}", detail.payment)
+                    .cell()
+                    .justify(Justify::Right),
                 format!("{:.2}", detail.mid).cell().justify(Justify::Right),
                 format!("{:.2}", detail.net_payment)
+                    .cell()
+                    .justify(Justify::Right),
+                format!("{:.2}", detail.my_portion)
                     .cell()
                     .justify(Justify::Right),
             ]
@@ -121,8 +213,10 @@ pub fn display_schedule(schedule: &Vec<AmortizationDetail>, period: CalculationP
             "Interest".cell(),
             "Principal".cell(),
             "Remaining Balance".cell(),
+            "Payment".cell(),
             "MID".cell(),
             "Net Payment".cell(),
+            "My Portion".cell(),
         ])
         .bold(true);
 

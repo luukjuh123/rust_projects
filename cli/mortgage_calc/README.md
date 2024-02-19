@@ -3,8 +3,11 @@
 ### To run the calculation:
 
 ```bash
-cargo run -- -p 785000 -r 4.65 -t 30 -w 840000 -i 95000 --period Yearly
+cargo run -- -p 777000 -r 4.50 -t 30 -w 840000 -i 100000 --period Monthly --mortgage-type Linear
+cargo run -- -p 770566.67 -r 4.00 -t 30 -w 840000 -i 100000 --period Monthly --mortgage-type Annuity
 ```
+
+
 
 - p = Sets the principal loan amount
 - r = Sets the annual interest rate (in percentage, e.g., 5 for 5%)

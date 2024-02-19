@@ -28,6 +28,10 @@ pub struct MortgageCalculator {
     #[arg(long, value_name = "PERIOD")]
     period: handlers::CalculationPeriod,
 
+    /// Sets the mortgage type
+    #[arg(long, value_name = "MORTGAGE_TYPE")]
+    mortgage_type: handlers::MortgageType,
+
     /// Turn debugging information on
     #[arg(short, long, action = clap::ArgAction::Count)]
     debug: u8,
@@ -41,6 +45,7 @@ fn main() {
     let term: u32 = args.term;
     let woz: f64 = args.woz;
     let income: f64 = args.income;
+    let mortgage_type: handlers::MortgageType = args.mortgage_type;
     let period: handlers::CalculationPeriod = args.period;
 
     println!("Principal: ${}", principal);
@@ -48,6 +53,7 @@ fn main() {
     println!("Loan Term: {} years", term);
     println!("Woz: {}", woz);
     println!("Income: {}", income);
+    println!("Mortgage Type: {:?}", mortgage_type);
     println!("Period: {:?}", period);
 
     match args.debug {
