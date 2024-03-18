@@ -61,11 +61,11 @@ pub fn amortization_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
 
 fn calculate_mortgage_interest_deduction(interest_payment: f64, args: &MortgageCalculator) -> f64 {
     let notional_rental_value_annual = args.woz * 0.0035; // Annual notional rental value
-    let tax_bracket_for_rental = if args.income > 73032.0 { 0.495 } else { 0.3693 };
+    let tax_bracket_for_rental = if args.income > 73032.0 { 0.495 } else { 0.3697 };
     let tax_cost_annual = notional_rental_value_annual * tax_bracket_for_rental;
     let tax_cost_per_month = tax_cost_annual / 12.0;
 
-    let mortgage_interest_deduction_bracket = 0.3693;
+    let mortgage_interest_deduction_bracket = 0.3697;
     interest_payment * mortgage_interest_deduction_bracket - tax_cost_per_month
 }
 
