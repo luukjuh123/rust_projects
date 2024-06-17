@@ -1,5 +1,5 @@
 [package]
-name = "port_scanner"
+name = "tcp_server"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,4 +7,3 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-clap = { version = "4.4.3", features = ["derive"] }

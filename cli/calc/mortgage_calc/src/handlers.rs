@@ -11,6 +11,7 @@ pub struct AmortizationDetail {
     pub mid: f64,
     pub net_payment: f64,
     pub my_portion: f64,
+    pub leftover: f64,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -72,7 +73,7 @@ fn calculate_mortgage_interest_deduction(interest_payment: f64, args: &MortgageC
 
 fn calculate_annuity_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail> {
     let monthly_rate = args.rate / 12.0 / 100.0;
-    let num_payments = args.term * 12;
+    let num_payments = args.term; // * 12
     let monthly_payment = args.principal
         * (monthly_rate * (1.0 + monthly_rate).powi(num_payments as i32))
         / ((1.0 + monthly_rate).powi(num_payments as i32) - 1.0);
@@ -87,6 +88,7 @@ fn calculate_annuity_schedule(args: MortgageCalculator) -> Vec<AmortizationDetai
         let net_payment = monthly_interest + principal_payment - mortgage_interest_deduction;
         current_principal -= principal_payment;
         let my_portion = 0.4 * payment;
+        let leftover = 0.6 * payment;
 
         match args.period {
             CalculationPeriod::Monthly => {
@@ -99,6 +101,7 @@ fn calculate_annuity_schedule(args: MortgageCalculator) -> Vec<AmortizationDetai
                     mid: mortgage_interest_deduction,
                     net_payment,
                     my_portion,
+                    leftover,
                 });
             }
             CalculationPeriod::Yearly => {
@@ -112,6 +115,7 @@ fn calculate_annuity_schedule(args: MortgageCalculator) -> Vec<AmortizationDetai
                         mid: mortgage_interest_deduction * 12.0,
                         net_payment: net_payment * 12.0,
                         my_portion: my_portion * 12.0,
+                        leftover: leftover * 12.0,
                     });
                 }
             }
@@ -136,6 +140,7 @@ fn calculate_linear_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
         let net_payment = principal_payment + monthly_interest - mortgage_interest_deduction;
         current_principal -= principal_payment;
         let my_portion = 0.4 * payment;
+        let leftover = 0.6 * payment;
 
         match args.period {
             CalculationPeriod::Monthly => {
@@ -148,6 +153,7 @@ fn calculate_linear_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
                     mid: mortgage_interest_deduction,
                     net_payment,
                     my_portion,
+                    leftover,
                 });
             }
             CalculationPeriod::Yearly => {
@@ -161,6 +167,7 @@ fn calculate_linear_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail
                         mid: mortgage_interest_deduction * 12.0,
                         net_payment: net_payment * 12.0,
                         my_portion: my_portion * 12.0,
+                        leftover: leftover * 12.0,
                     });
                 }
             }
@@ -202,6 +209,9 @@ pub fn display_schedule(schedule: &Vec<AmortizationDetail>, period: CalculationP
                 format!("{:.2}", detail.my_portion)
                     .cell()
                     .justify(Justify::Right),
+                format!("{:.2}", detail.leftover)
+                    .cell()
+                    .justify(Justify::Right),
             ]
         })
         .collect();
@@ -217,6 +227,7 @@ pub fn display_schedule(schedule: &Vec<AmortizationDetail>, period: CalculationP
             "MID".cell(),
             "Net Payment".cell(),
             "My Portion".cell(),
+            "Leftover".cell(),
         ])
         .bold(true);
 
