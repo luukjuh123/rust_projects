@@ -128,7 +128,7 @@ fn calculate_annuity_schedule(args: MortgageCalculator) -> Vec<AmortizationDetai
 
 fn calculate_linear_schedule(args: MortgageCalculator) -> Vec<AmortizationDetail> {
     let monthly_rate = args.rate / 12.0 / 100.0;
-    let num_payments = args.term * 12;
+    let num_payments = args.term * 12; // 
     let principal_payment = args.principal / num_payments as f64;
     let mut current_principal = args.principal;
     let mut schedule = Vec::new();

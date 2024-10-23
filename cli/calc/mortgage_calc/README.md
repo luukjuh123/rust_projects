@@ -4,7 +4,7 @@
 
 ```bash
 cargo run -- -p 777000 -r 4.50 -t 30 -w 840000 -i 100000 --period Monthly --mortgage-type Linear
-cargo run -- -p 766566.67 -r 3.90 -t 354 -w 840000 -i 100000 --period Monthly --mortgage-type Annuity
+cargo run -- -p 751100 -r 3.75 -t 348 -w 840000 -i 100000 --period Monthly --mortgage-type Annuity
 ```
 
 
@@ -16,4 +16,7 @@ cargo run -- -p 766566.67 -r 3.90 -t 354 -w 840000 -i 100000 --period Monthly --
 - i = Sets the highest earning income (necessary for tax calc (if above 73032 additional tax has to be paid))
 - --period = Yearly or Monthly
 - --mortgage-type = Linear or Annuity
-d
+
+```bash
+cargo run -- -p 753258.33 -r 3.66 -t 348 -w 840000 -i 100000 --period Monthly --mortgage-type Annuity
+```
