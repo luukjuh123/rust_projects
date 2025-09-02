@@ -1,5 +1,5 @@
 [package]
-name = "mortgage_calc"
+name = "mortgage_capacity"
 version = "0.1.0"
 edition = "2021"
 

@@ -4,7 +4,7 @@
 
 ```bash
 cargo run -- -p 777000 -r 4.50 -t 30 -w 840000 -i 100000 --period Monthly --mortgage-type Linear
-cargo run -- -p 751100 -r 3.75 -t 348 -w 840000 -i 100000 --period Monthly --mortgage-type Annuity
+cargo run -- -p 751100 -r 3.5 -t 29 -w 840000 -i 100000 --period Monthly --mortgage-type Linear
 ```
 
 
